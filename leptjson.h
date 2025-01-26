@@ -10,13 +10,13 @@ class lept_value;
 
 class lept_value {
 private: 
-	/*union u{
+	union u{
 		double n;
 		std::string s;
 		std::vector<lept_value> arr;
 		std::map<std::string, lept_value> obj;
 		u() { };
-	};*/
+	};
 	lept_type type;
 
 public : 
@@ -38,22 +38,22 @@ public :
 
 	bool get_boolean(); 
 	void set_boolean(int b);
-//#if 0 
-//	double get_number(); 
-//	void set_number(double n);
-//
-//	const std::string get_string();
-//	size_t get_string_length();
-//	void set_string(std::string, size_t len);
-//
-//	size_t get_array_size();
-//	lept_value get_array_element(size_t index);
-//
-//	size_t get_object_size();
-//	std::string get_object_key(size_t index); 
-//	size_t get_object_key_length(size_t index); 
-//	lept_value get_object_value(size_t index);
-//#endif 
+
+	double get_number(); 
+	void set_number(double n);
+#if 0 
+	const std::string get_string();
+	size_t get_string_length();
+	void set_string(std::string, size_t len);
+
+	size_t get_array_size();
+	lept_value get_array_element(size_t index);
+
+	size_t get_object_size();
+	std::string get_object_key(size_t index); 
+	size_t get_object_key_length(size_t index); 
+	lept_value get_object_value(size_t index);
+#endif 
 };
 
 enum  {

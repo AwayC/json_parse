@@ -56,10 +56,53 @@ static void test_parse_false() {
 	v.free();
 }
 
+#define TEST_NUMBER(expect, json) do{\
+	lept_value v; \
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse(json)) ; \
+	EXPECT_EQ_INT(lept_type::LEPT_NUMBER, v.get_type()) ;\
+	EXPECT_EQ_DOUBLE(expect, v.get_number()) ;\
+	v.free(); \
+} while(0) 
+
+static void test_number() {
+	TEST_NUMBER(0.0, "0");
+	TEST_NUMBER(0.0, "-0");
+	TEST_NUMBER(0.0, "-0.0");
+	TEST_NUMBER(1.0, "1");
+	TEST_NUMBER(-1.0, "-1");
+	TEST_NUMBER(1.5, "1.5");
+	TEST_NUMBER(-1.5, "-1.5");
+	TEST_NUMBER(3.1416, "3.1416");
+	TEST_NUMBER(1E10, "1E10");
+	TEST_NUMBER(1e10, "1e10");
+	TEST_NUMBER(1E+10, "1E+10");
+	TEST_NUMBER(1E-10, "1E-10");
+	TEST_NUMBER(-1E10, "-1E10");
+	TEST_NUMBER(-1e10, "-1e10");
+	TEST_NUMBER(-1E+10, "-1E+10");
+	TEST_NUMBER(-1E-10, "-1E-10");
+	TEST_NUMBER(1.234E+10, "1.234E+10");
+	TEST_NUMBER(1.234E-10, "1.234E-10");
+#if 0 
+	TEST_NUMBER(0.0, "1e-10000"); /* must underflow */
+	
+	TEST_NUMBER(1.0000000000000002, "1.0000000000000002"); /* the smallest number > 1 */
+	TEST_NUMBER(4.9406564584124654e-324, "4.9406564584124654e-324"); /* minimum denormal */
+	TEST_NUMBER(-4.9406564584124654e-324, "-4.9406564584124654e-324");
+	TEST_NUMBER(2.2250738585072009e-308, "2.2250738585072009e-308");  /* Max subnormal double */
+	TEST_NUMBER(-2.2250738585072009e-308, "-2.2250738585072009e-308");
+	TEST_NUMBER(2.2250738585072014e-308, "2.2250738585072014e-308");  /* Min normal positive double */
+	TEST_NUMBER(-2.2250738585072014e-308, "-2.2250738585072014e-308");
+	TEST_NUMBER(1.7976931348623157e+308, "1.7976931348623157e+308");  /* Max double */
+	TEST_NUMBER(-1.7976931348623157e+308, "-1.7976931348623157e+308");
+#endif
+}
+
 static void test_parse() {
 	test_parse_null();
 	test_parse_false();
 	test_parse_true();
+	test_parse_number();
 }
 
 int main() {
