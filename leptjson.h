@@ -10,12 +10,12 @@ class lept_value;
 
 class lept_value {
 private: 
-	union u{
+	union {
+	public: 
 		double n;
 		std::string s;
 		std::vector<lept_value> arr;
 		std::map<std::string, lept_value> obj;
-		u() { };
 	};
 	lept_type type;
 
@@ -40,7 +40,7 @@ public :
 	void set_boolean(int b);
 
 	double get_number(); 
-	void set_number(double n);
+	void set_number(double num);
 #if 0 
 	const std::string get_string();
 	size_t get_string_length();
