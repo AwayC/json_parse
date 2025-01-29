@@ -31,6 +31,11 @@ static int test_pass = 0;
 #define EXPECT_FALSE(actual) EXPECT_EQ_BASE((actual) != 1, "false" , "true", "%s") 
 #define EXPECT_EQ_STRING(expect, actual, alength) \
 	EXPECT_EQ_BASE(sizeof(expect) -1 == alength && memcmp(expect, actual, alength + 1) == 0 , expect, actual, "%s"); 
+#if defined(_MSC_VER)
+#define EXPECT_EQ_SIZE_T(expect, actual) EXPECT_EQ_BASE((expect) == (actual), (size_t)expect, (size_t)actual, "%Iu")
+#else
+#define EXPECT_EQ_SIZE_T(expect, actual) EXPECT_EQ_BASE((expect) == (actual), (size_t)expect, (size_t)actual, "%zu")
+#endif
 
 static void test_parse_null() {
 	lept_value v; 
@@ -100,17 +105,18 @@ static void test_parse_number() {
 	lept_value v; \
 	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse(json)); \
 	EXPECT_EQ_INT(lept_type::string, v.get_type()); \
+	EXPECT_EQ_SIZE_T(sizeof(expect), v.get_string_length() + 1) ;\
 	EXPECT_EQ_STRING(expect, v.get_string().c_str(), v.get_string_length()) ; \
 } while(0) 
 
-void test_parse_string() {
+static void test_parse_string() {
  	TEST_STRING("1", "\"1\"");
 #if 1
 	TEST_STRING("Hello", "\"Hello\"");
 	TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");
 	TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
 #endif
-#if 0
+#if 1
 	TEST_STRING("Hello\0World", "\"Hello\\u0000World\"");
 	TEST_STRING("\x24", "\"\\u0024\"");         /* Dollar sign U+0024 */
 	TEST_STRING("\xC2\xA2", "\"\\u00A2\"");     /* Cents sign U+00A2 */
@@ -120,13 +126,31 @@ void test_parse_string() {
 #endif
 }
 
+void static test_parse_array() {
+	lept_value v; 
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ ]")); 
+	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
+	EXPECT_EQ_SIZE_T(0, v.get_array_size()); 
+	
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ null , false , true , 123 , \"abc\" ]")); 
+	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
+	EXPECT_EQ_SIZE_T(5, v.get_array_size());
+	std::vector<lept_type> a = { lept_type::null, lept_type::lfalse, lept_type::ltrue, lept_type::number, lept_type::string }; 
+	for (size_t i = 0; i < 5;i ++) 
+		EXPECT_EQ_INT(a[i], v.get_array_element(i).get_type());
+	EXPECT_EQ_DOUBLE(123.0, v.get_array_element(3).get_number()); 
+	EXPECT_EQ_STRING("abc", v.get_array_element(4).get_string().c_str(), v.get_array_element(4).get_string_length());
+}
+
 static void test_parse() {
 	test_parse_null();
 	test_parse_false();
 	test_parse_true();
 	test_parse_number();
 	test_parse_string(); 
-	
+#if 0 
+	test_parse_array(); 
+#endif
 }
 
 int main() {

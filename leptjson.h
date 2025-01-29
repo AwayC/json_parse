@@ -46,10 +46,11 @@ public :
 	const std::string get_string();
 	size_t get_string_length();
 	void set_string(std::string, size_t len);
-#if 0 
+
 	size_t get_array_size();
 	lept_value get_array_element(size_t index);
 
+#if 0
 	size_t get_object_size();
 	std::string get_object_key(size_t index); 
 	size_t get_object_key_length(size_t index); 

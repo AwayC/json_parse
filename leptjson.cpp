@@ -95,6 +95,7 @@ int lept_context::parse_hex4(size_t p, int* u) {
 	*u = 0; 
 	for (int i = 0; i < 4; i++) {
 		char ch = json[++ p];
+		*u <<= 4; 
 		if (ch >= '0' && ch <= '9') *u |= ch - '0';
 		else if (ch >= 'A' && ch <= 'Z') *u |= ch - ('A' - 10);
 		else if (ch >= 'a' && ch <= 'z') *u |= ch - ('a' - 10);
@@ -105,9 +106,9 @@ int lept_context::parse_hex4(size_t p, int* u) {
 
 void lept_context::encode_utf8(int u) {
 	if (u <= 0x7F)
-		push((char)0x7F, sizeof(char)); 
+		push((char)u, sizeof(char));
 	else if (u <= 0x7FF) {
-		push((char)(0xc0 | ((u >> 6) & 0xFF)), sizeof(char));
+		push((char)(0xC0 | ((u >> 6) & 0xFF)), sizeof(char));
 		push((char)(0x80 | (u) & 0x3F), sizeof(char)); 
 	}
 	else if (u <= 0xFFFF) {
