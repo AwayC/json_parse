@@ -4,7 +4,7 @@
 #include <string> 
 #include <vector> 
 #include <map> 
-enum class lept_type { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT };
+enum class lept_type { null, lfalse, ltrue, number, string, array, object };
 
 class lept_value;
 
@@ -19,21 +19,22 @@ private:
 	};
 	lept_type type;
 
+	void free(); 
+	lept_type set_type(lept_type type) {
+		this->type = type;
+	}
+
 public : 
 	lept_value() ;
 	~lept_value();
 
 	int parse(std::string json);
 	
-	void free(); 
 
 	void set_null(); 
 
 	lept_type get_type() {
 		return type;
-	};
-	void set_type(lept_type type) {
-		this->type = type;
 	};
 
 	bool get_boolean(); 
@@ -41,11 +42,11 @@ public :
 
 	double get_number(); 
 	void set_number(double num);
-#if 0 
+
 	const std::string get_string();
 	size_t get_string_length();
 	void set_string(std::string, size_t len);
-
+#if 0 
 	size_t get_array_size();
 	lept_value get_array_element(size_t index);
 

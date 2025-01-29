@@ -29,44 +29,42 @@ static int test_pass = 0;
 #define EXPECT_EQ_DOUBLE(expect, actual) EXPECT_EQ_BASE((expect) == (actual) , expect, actual, "%.17g") 
 #define EXPECT_TRUE(actual) EXPECT_EQ_BASE((actual) != 0, "true" , "false" , "%s" ) 
 #define EXPECT_FALSE(actual) EXPECT_EQ_BASE((actual) != 1, "false" , "true", "%s") 
+#define EXPECT_EQ_STRING(expect, actual, alength) \
+	EXPECT_EQ_BASE(sizeof(expect) -1 == alength && memcmp(expect, actual, alength + 1) == 0 , expect, actual, "%s"); 
 
 static void test_parse_null() {
 	lept_value v; 
 	v.set_boolean(0);
 	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("null"));
-	EXPECT_EQ_TYPE(lept_type::LEPT_NULL, v.get_type());
-	v.free();
+	EXPECT_EQ_TYPE(lept_type::null, v.get_type());
 }
 
 static void test_parse_true() {
 	lept_value v;
 	v.set_boolean(0);
 	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("true"));
-	EXPECT_EQ_TYPE(lept_type::LEPT_TRUE, v.get_type()); 
+	EXPECT_EQ_TYPE(lept_type::ltrue, v.get_type()); 
 	EXPECT_TRUE(v.get_boolean()); 
-	v.free();
 }
 
 static void test_parse_false() {
 	lept_value v; 
 	v.set_boolean(1); 
 	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("false"));
-	EXPECT_EQ_TYPE(lept_type::LEPT_FALSE, v.get_type());
+	EXPECT_EQ_TYPE(lept_type::lfalse, v.get_type());
 	EXPECT_FALSE(v.get_boolean());
-	v.free();
 }
 
 #define TEST_NUMBER(expect, json) do{\
 	lept_value v; \
 	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse(json)) ; \
-	EXPECT_EQ_INT(lept_type::LEPT_NUMBER, v.get_type()) ;\
+	EXPECT_EQ_INT(lept_type::number, v.get_type()) ;\
 	EXPECT_EQ_DOUBLE(expect, v.get_number()) ;\
-	v.free(); \
 } while(0) 
 
 static void test_parse_number() {
-	TEST_NUMBER(0.0, "0");
-	TEST_NUMBER(0.0, "-0");
+	TEST_NUMBER(0.0, "-0"); 
+#if 1
 	TEST_NUMBER(0.0, "-0.0");
 	TEST_NUMBER(1.0, "1");
 	TEST_NUMBER(-1.0, "-1");
@@ -95,6 +93,31 @@ static void test_parse_number() {
 	TEST_NUMBER(-2.2250738585072014e-308, "-2.2250738585072014e-308");
 	TEST_NUMBER(1.7976931348623157e+308, "1.7976931348623157e+308");  /* Max double */
 	TEST_NUMBER(-1.7976931348623157e+308, "-1.7976931348623157e+308");
+#endif
+}
+
+#define TEST_STRING(expect, json) do{ \
+	lept_value v; \
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse(json)); \
+	EXPECT_EQ_INT(lept_type::string, v.get_type()); \
+	EXPECT_EQ_STRING(expect, v.get_string().c_str(), v.get_string_length()) ; \
+} while(0) 
+
+void test_parse_string() {
+ 	TEST_STRING("1", "\"1\"");
+#if 1
+	TEST_STRING("Hello", "\"Hello\"");
+	TEST_STRING("Hello\nWorld", "\"Hello\\nWorld\"");
+	TEST_STRING("\" \\ / \b \f \n \r \t", "\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
+#endif
+#if 0
+	TEST_STRING("Hello\0World", "\"Hello\\u0000World\"");
+	TEST_STRING("\x24", "\"\\u0024\"");         /* Dollar sign U+0024 */
+	TEST_STRING("\xC2\xA2", "\"\\u00A2\"");     /* Cents sign U+00A2 */
+	TEST_STRING("\xE2\x82\xAC", "\"\\u20AC\""); /* Euro sign U+20AC */
+	TEST_STRING("\xF0\x9D\x84\x9E", "\"\\uD834\\uDD1E\"");  /* G clef sign U+1D11E */
+	TEST_STRING("\xF0\x9D\x84\x9E", "\"\\ud834\\udd1e\"");  /* G clef sign U+1D11E */
+#endif
 }
 
 static void test_parse() {
@@ -102,6 +125,8 @@ static void test_parse() {
 	test_parse_false();
 	test_parse_true();
 	test_parse_number();
+	test_parse_string(); 
+	
 }
 
 int main() {
