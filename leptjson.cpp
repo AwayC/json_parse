@@ -9,33 +9,36 @@
 #define ISDIGIT(ch) ((ch) >= '0' && (ch) <= '9') 
 #define ISDIGIT1TO9(ch) ((ch) >= '1' && (ch) <= '9') 
 
-class lept_context {
+class lept_context{
 public : 
 	std::string json; 
 	size_t ptr;
-	size_t  top;
-	std::string stk;  
+
+	size_t  str_top;
+	std::string stk_str;  
 	
 	void parse_whitespace();
 	int parse_value(lept_value* v); 
 	int parse_literal(lept_value* v, std::string literal , lept_type type); 
 	int parse_number(lept_value* v); 
 	int parse_string(lept_value* v); 
-	int parse_hex4(size_t p , int* u); 
+	size_t parse_hex4(size_t p , int* u); 
+	int parse_array(lept_value* v); 
 	void encode_utf8(int u); 
-	void push(char c, size_t size);
-	std::string pop(size_t size); 
-	lept_context() { ptr = top = 0; stk = ""; };
+	void push_char(char c);
+	std::string pop_string(size_t size); 
+	lept_context() { ptr = str_top = 0; stk_str = ""; };
 };
 
-void lept_context::push(char c, size_t size) {
-	top++; 
-	stk.push_back(c); 
+
+void lept_context::push_char(char c) {
+	str_top++; 
+	stk_str.push_back(c); 
 }
 
-std::string lept_context::pop(size_t size) {
-	assert(top >= size); 
-	return stk; 
+std::string lept_context::pop_string(size_t size) {
+	assert(str_top >= size); 
+	return stk_str; 
 }
 
 void lept_context::parse_whitespace() {
@@ -91,7 +94,7 @@ int lept_context::parse_number(lept_value* v) {
 	return LEPT_PARSE_OK;
 }
 
-int lept_context::parse_hex4(size_t p, int* u) {
+size_t lept_context::parse_hex4(size_t p, int* u) {
 	*u = 0; 
 	for (int i = 0; i < 4; i++) {
 		char ch = json[++ p];
@@ -106,49 +109,49 @@ int lept_context::parse_hex4(size_t p, int* u) {
 
 void lept_context::encode_utf8(int u) {
 	if (u <= 0x7F)
-		push((char)u, sizeof(char));
+		push_char((char)u);
 	else if (u <= 0x7FF) {
-		push((char)(0xC0 | ((u >> 6) & 0xFF)), sizeof(char));
-		push((char)(0x80 | (u) & 0x3F), sizeof(char)); 
+		push_char((char)(0xC0 | ((u >> 6) & 0xFF)));
+		push_char((char)(0x80 | (u) & 0x3F)); 
 	}
 	else if (u <= 0xFFFF) {
-		push((char)(0xE0 | (u >> 12) & 0xFF), sizeof(char)); 
-		push((char)(0x80 | (u >> 6) & 0x3F), sizeof(char));
-		push((char)(0x80 | u & 0x3F), sizeof(char));
+		push_char((char)(0xE0 | (u >> 12) & 0xFF)); 
+		push_char((char)(0x80 | (u >> 6) & 0x3F));
+		push_char((char)(0x80 | u & 0x3F));
 	}
 	else {
 		assert(u <= 0x10FFFF);
-		push((char)(0xF0 | (u >> 18) & 0xFF), sizeof(char));
-		push((char)(0x80 | (u >> 12) & 0x3F), sizeof(char));
-		push((char)(0x80 | (u >> 6) & 0x3F), sizeof(char));
-		push((char)(0x80 | u & 0x3F), sizeof(char));
+		push_char((char)(0xF0 | (u >> 18) & 0xFF));
+		push_char((char)(0x80 | (u >> 12) & 0x3F));
+		push_char((char)(0x80 | (u >> 6) & 0x3F));
+		push_char((char)(0x80 | u & 0x3F));
 	}
 }
 
 int lept_context::parse_string(lept_value* v) {
 	assert(ptr < json.size() && json[ptr] == '\"');
-	size_t tmp = ptr, len = 0, head = top;
+	size_t tmp = ptr, len = 0, head = str_top;
 	std::string str; 
 	int u, u2;
 	for (;;) {
 		char ch = json[++tmp];
 		switch (ch) {
 			case '\"':
-				len = top - head;
-				v->set_string(pop(len), len);
+				len = str_top - head;
+				v->set_string(pop_string(len), len);
 				ptr = ++tmp;
-				top = head; 
+				str_top = head; 
 				return LEPT_PARSE_OK;
 			case '\\':
 				switch (json[++tmp]) {
-					case '\"': push('\"', sizeof(char));  break;
-					case '\\': push('\\', sizeof(char)); break;
-					case '/': push('/', sizeof(char));  break;
-					case 'b': push('\b', sizeof(char)); break;
-					case 't': push('\t', sizeof(char)); break;
-					case 'n': push('\n', sizeof(char)); break;
-					case 'r':push('\r', sizeof(char)); break;
-					case 'f': push('\f', sizeof(char)); break;
+					case '\"': push_char('\"');  break;
+					case '\\': push_char('\\'); break;
+					case '/': push_char('/');  break;
+					case 'b': push_char('\b'); break;
+					case 't': push_char('\t'); break;
+					case 'n': push_char('\n'); break;
+					case 'r':push_char('\r'); break;
+					case 'f': push_char('\f'); break;
 					case 'u':
 						if (!(tmp = parse_hex4(tmp, &u)))
 							return LEPT_PARSE_INVALID_UNICODE_HEX;
@@ -170,17 +173,51 @@ int lept_context::parse_string(lept_value* v) {
 				}
 				break; 
 			case '\0': 
-				top = 0; 
+				str_top = 0; 
 				return LEPT_PARSE_MISS_QUOTATION_MARK;
 			default:
 				if ((unsigned char)ch < 0x20) {
-					top = 0; 
+					str_top = 0; 
 					return LEPT_PARSE_INVALID_STRING_CHAR;
 				}
-				push(ch, sizeof(char));
+				push_char(ch);
 				break; 
 		}
 	}
+}
+
+int lept_context::parse_array(lept_value* v) {
+	assert(json[ptr ++] == '['); 
+	std::vector<lept_value> arr; 
+	parse_whitespace(); 
+	if (json[ptr] == ']') {
+		v->set_array(arr); 
+		return LEPT_PARSE_OK; 
+	}
+	int ret;
+	size_t size; 
+	for (;;) {
+		lept_value e; 
+		if ((ret = parse_value(&e)) != LEPT_PARSE_OK) 
+			break; 
+		arr.push_back(e); 
+		size++; 
+		parse_whitespace(); 
+		if (json[ptr] == ',') {
+			ptr++; 
+			parse_whitespace(); 
+		}
+		else if (json[ptr] == ']') {
+			ptr++; 
+			v->set_array(arr); 
+			return LEPT_PARSE_OK; 
+		}
+		else {
+			ret = LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET; 
+			break;
+		}
+	}
+	return ret; 
 }
 
 int lept_context::parse_value(lept_value* v) {
@@ -190,6 +227,7 @@ int lept_context::parse_value(lept_value* v) {
 	case 'n': return this->parse_literal(v, "null", lept_type::null);
 	case '\0': return LEPT_PARSE_EXPECT_VALUE;
 	case '\"': return this->parse_string(v); 
+	case '[': return this->parse_array(v); 
 	default: return parse_number(v); 
 	}
 }
@@ -200,7 +238,7 @@ int lept_value::parse(std::string json) {
 	lept_context c;
 	int ret;
 	c.json = json + '\0';
-	c.top = 0;
+	c.str_top = 0;
 	this->free();
 	c.parse_whitespace(); 
 	if (ret = c.parse_value(this)) {
@@ -210,8 +248,8 @@ int lept_value::parse(std::string json) {
 			ret = LEPT_PARSE_ROOT_NOT_SINGULAR;
 		}
 	}
-	assert(c.top == 0);
-	c.stk.clear(); 
+	assert(c.str_top == 0);
+	c.stk_str.clear(); 
 	return ret;
 }
 

@@ -23,11 +23,11 @@ private:
 	lept_type set_type(lept_type type) {
 		this->type = type;
 	}
-
+	
 public : 
 	lept_value() ;
 	~lept_value();
-
+	
 	int parse(std::string json);
 	
 
@@ -49,7 +49,7 @@ public :
 
 	size_t get_array_size();
 	lept_value get_array_element(size_t index);
-
+	void set_array(std::vector<lept_value>& arr);
 #if 0
 	size_t get_object_size();
 	std::string get_object_key(size_t index); 
