@@ -257,6 +257,17 @@ lept_value::lept_value() {
 	this->type = lept_type::null; 
 }
 
+lept_value::lept_value(const lept_value& val) {
+	this->free(); 
+	switch (val.type) {
+	case lept_type::number: n = val.n; break;
+	case lept_type::string: new(&s) std::string(val.s); break;
+	case lept_type::array: new(&arr) std::vector<lept_value>(val.arr); break;
+	default: break;
+	}
+	type = val.type; 
+}
+
 lept_value::~lept_value() {
 	this->free(); 
 }
@@ -317,4 +328,20 @@ void lept_value::set_string(std::string str, size_t len) {
 size_t lept_value::get_string_length() {
 	assert(type == lept_type::string); 
 	return s.size(); 
+}
+
+void lept_value::set_array(const std::vector<lept_value>& val) {
+	this->free(); 
+	type = lept_type::array; 
+	new(&arr) std::vector<lept_value>(val); 
+}
+
+size_t lept_value::get_array_size() {
+	assert(type == lept_type::array); 
+	return arr.size(); 
+}
+
+lept_value lept_value::get_array_element(size_t index) {
+	assert(type == lept_type::array && arr.size() > index); 
+	return arr[index]; 
 }
