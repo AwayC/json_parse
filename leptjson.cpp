@@ -24,6 +24,7 @@ public :
 	int parse_string(lept_value* v); 
 	size_t parse_hex4(size_t p , int* u); 
 	int parse_array(lept_value* v); 
+	int parse_object(lept_value* v); 
 	void encode_utf8(int u); 
 	void push_char(char c);
 	std::string pop_string(size_t size); 
@@ -141,6 +142,7 @@ int lept_context::parse_string(lept_value* v) {
 				v->set_string(pop_string(len), len);
 				ptr = ++tmp;
 				str_top = head; 
+				stk_str.clear(); 
 				return LEPT_PARSE_OK;
 			case '\\':
 				switch (json[++tmp]) {
@@ -174,10 +176,12 @@ int lept_context::parse_string(lept_value* v) {
 				break; 
 			case '\0': 
 				str_top = 0; 
+				stk_str.clear(); 
 				return LEPT_PARSE_MISS_QUOTATION_MARK;
 			default:
 				if ((unsigned char)ch < 0x20) {
 					str_top = 0; 
+					stk_str.clear(); 
 					return LEPT_PARSE_INVALID_STRING_CHAR;
 				}
 				push_char(ch);
@@ -221,6 +225,49 @@ int lept_context::parse_array(lept_value* v) {
 	return ret; 
 }
 
+int lept_context::parse_object(lept_value* v) {
+	assert(json[ptr ++] == '{'); 
+	std::map<std::string, lept_value> mp; 
+	parse_whitespace(); 
+	if (json[ptr] == '}') {
+		v->set_object(mp); 
+		ptr++; 
+		return LEPT_PARSE_OK;
+	}
+	int ret; 
+	for (;;) {
+		if (json[ptr] != '\"')
+			return LEPT_PARSE_MISS_KEY; 
+		lept_value str; 
+		if ((ret = parse_string(&str)) != LEPT_PARSE_OK)
+			return ret; 
+		parse_whitespace(); 
+		if (json[ptr] != ':')
+			return LEPT_PARSE_MISS_COLON; 
+		else {
+			ptr++; 
+			parse_whitespace();  
+		}
+		lept_value e; 
+		if ((ret = parse_value(&e)) != LEPT_PARSE_OK)
+			return ret; 
+		mp.insert(std::pair<std::string, lept_value>(str.get_string(), e)); 
+		parse_whitespace(); 
+		if (json[ptr] == '}') {
+			v->set_object(mp);
+			ptr++;
+			return LEPT_PARSE_OK;
+		}
+		else if (json[ptr] == ',') {
+			ptr++; 
+			parse_whitespace(); 
+		}
+		else {
+			return LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET; 
+		}
+	}
+}
+
 int lept_context::parse_value(lept_value* v) {
 	switch (this->json[ptr]) {
 	case 't': return this->parse_literal(v, "true", lept_type::ltrue);
@@ -229,6 +276,7 @@ int lept_context::parse_value(lept_value* v) {
 	case '\0': return LEPT_PARSE_EXPECT_VALUE;
 	case '\"': return this->parse_string(v); 
 	case '[': return this->parse_array(v);
+	case '{': return this->parse_object(v); 
 	default: return parse_number(v); 
 	}
 }
@@ -348,4 +396,23 @@ size_t lept_value::get_array_size() {
 lept_value lept_value::get_array_element(size_t index) {
 	assert(type == lept_type::array && arr.size() > index); 
 	return arr[index]; 
+}
+
+bool lept_value::find_key(std::string key) {
+	return (obj.count(key) != 0); 
+}
+
+lept_value lept_value::get_object_value(std::string key) {
+	assert(obj.count(key) > 0); 
+	return obj[key]; 
+}
+
+size_t lept_value::get_object_size() {
+	return obj.size(); 
+}
+
+void lept_value::set_object(std::map<std::string, lept_value> mp) {
+	this->free(); 
+	type = lept_type::object; 
+	new(&obj) std::map<std::string, lept_value>(mp); 
 }

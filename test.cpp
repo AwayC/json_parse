@@ -157,6 +157,61 @@ void static test_parse_array() {
 	}
 }
 
+void test_parse_object() {
+	lept_value v;
+#if 1
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse(" { } "));
+	EXPECT_EQ_INT(lept_type::object, v.get_type());
+	EXPECT_EQ_SIZE_T(0, v.get_object_size());
+#endif
+#if 1
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse(
+		" { "
+		"\"n\" : null , "
+		"\"f\" : false , "
+		"\"t\" : true , "
+		"\"i\" : 123 , "
+		"\"s\" : \"abc\", "
+		"\"a\" : [ 1, 2, 3 ],"
+		"\"o\" : { \"1\" : 1, \"2\" : 2, \"3\" : 3 }"
+		" } "
+	)); 
+#endif 
+#if 1
+	EXPECT_EQ_INT(lept_type::object, v.get_type()); 
+	EXPECT_EQ_SIZE_T(7, v.get_object_size()); 
+	EXPECT_TRUE(v.find_key("n"));
+	EXPECT_EQ_INT(lept_type::null, v.get_object_value("n").get_type()); 
+	EXPECT_TRUE(v.find_key("f")); 
+	EXPECT_EQ_INT(lept_type::lfalse, v.get_object_value("f").get_type()); 
+	EXPECT_TRUE(v.find_key("t")); 
+	EXPECT_EQ_INT(lept_type::ltrue, v.get_object_value("t").get_type()); 
+	EXPECT_TRUE(v.find_key("i")); 
+	EXPECT_EQ_DOUBLE(123.0, v.get_object_value("i").get_number()); 
+	EXPECT_TRUE(v.find_key("s")); 
+	EXPECT_EQ_STRING("abc", v.get_object_value("s").get_string().c_str(), v.get_object_value("s").get_string_length());
+	EXPECT_TRUE(v.find_key("a")); 
+	lept_value a = v.get_object_value("a"); 
+	EXPECT_EQ_INT(lept_type::array, a.get_type()); 
+	EXPECT_EQ_SIZE_T(3, a.get_array_size()); 
+	for (size_t i = 0; i < 3; i++) {
+		lept_value e = a.get_array_element(i); 
+		EXPECT_EQ_INT(lept_type::number, e.get_type()); 
+		EXPECT_EQ_DOUBLE((double)(i + 1), e.get_number()); 
+	}
+	EXPECT_TRUE(v.find_key("o")); 
+	lept_value o = v.get_object_value("o"); 
+	EXPECT_EQ_SIZE_T(3, o.get_object_size()); 
+	for (int i = 1; i <= 3; i++) {
+		std::string s = "0"; 
+		s[0] = s[0] + i; 
+		lept_value e = o.get_object_value(s);
+		EXPECT_EQ_INT(lept_type::number, e.get_type()); 
+		EXPECT_EQ_DOUBLE((double)i, e.get_number()); 
+	}
+#endif 
+}
+
 static void test_parse() {
 	test_parse_null();
 	test_parse_false();
@@ -164,6 +219,7 @@ static void test_parse() {
 	test_parse_number();
 	test_parse_string(); 
 	test_parse_array(); 
+	test_parse_object(); 
 }
 
 int main() {

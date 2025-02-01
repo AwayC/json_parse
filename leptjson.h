@@ -48,11 +48,11 @@ public :
 	size_t get_array_size();
 	lept_value get_array_element(size_t index);
 	void set_array(const std::vector<lept_value>& val);
-#if 0
-	size_t get_object_size();
-	std::string get_object_key(size_t index); 
-	size_t get_object_key_length(size_t index); 
-	lept_value get_object_value(size_t index);
+#if 1
+	bool find_key(std::string key);
+	lept_value get_object_value(std::string key); 
+	size_t get_object_size(); 
+	void set_object(const std::map<std::string, lept_value> mp); 
 #endif 
 };
 
