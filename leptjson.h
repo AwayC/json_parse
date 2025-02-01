@@ -20,9 +20,6 @@ private:
 	lept_type type;
 
 	void free(); 
-	lept_type set_type(lept_type type) {
-		this->type = type;
-	}
 	
 public : 
 	lept_value() ;

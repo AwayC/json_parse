@@ -126,21 +126,36 @@ static void test_parse_string() {
 #endif
 }
 
-//void static test_parse_array() {
-//	lept_value v; 
-//	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ ]")); 
-//	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
-//	EXPECT_EQ_SIZE_T(0, v.get_array_size()); 
-//	
-//	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ null , false , true , 123 , \"abc\" ]")); 
-//	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
-//	EXPECT_EQ_SIZE_T(5, v.get_array_size());
-//	std::vector<lept_type> a = { lept_type::null, lept_type::lfalse, lept_type::ltrue, lept_type::number, lept_type::string }; 
-//	for (size_t i = 0; i < 5;i ++) 
-//		EXPECT_EQ_INT(a[i], v.get_array_element(i).get_type());
-//	EXPECT_EQ_DOUBLE(123.0, v.get_array_element(3).get_number()); 
-//	EXPECT_EQ_STRING("abc", v.get_array_element(4).get_string().c_str(), v.get_array_element(4).get_string_length());
-//}
+void static test_parse_array() {
+	lept_value v; 
+#if 1
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ ]")); 
+	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
+	EXPECT_EQ_SIZE_T(0, v.get_array_size()); 
+	
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ null , false , true , 123 , \"abc\" ]")); 
+	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
+	EXPECT_EQ_SIZE_T(5, v.get_array_size());
+	std::vector<lept_type> a = { lept_type::null, lept_type::lfalse, lept_type::ltrue, lept_type::number, lept_type::string }; 
+	for (size_t i = 0; i < 5;i ++) 
+		EXPECT_EQ_INT(a[i], v.get_array_element(i).get_type());
+	EXPECT_EQ_DOUBLE(123.0, v.get_array_element(3).get_number()); 
+	EXPECT_EQ_STRING("abc", v.get_array_element(4).get_string().c_str(), v.get_array_element(4).get_string_length());
+#endif
+	EXPECT_EQ_INT(LEPT_PARSE_OK, v.parse("[ [ ] , [ 0 ] , [ 0 , 1 ] , [ 0 , 1 , 2 ] ]")); 
+	EXPECT_EQ_INT(lept_type::array, v.get_type()); 
+	EXPECT_EQ_SIZE_T(4, v.get_array_size()); 
+	for (size_t i = 0; i < 4; i++) {
+		lept_value a = v.get_array_element(i);
+		EXPECT_EQ_INT(lept_type::array, a.get_type());
+		EXPECT_EQ_SIZE_T(i, a.get_array_size());
+		for (size_t j = 0; j < i; j++) {
+			lept_value e = a.get_array_element(j); 
+			EXPECT_EQ_INT(lept_type::number, e.get_type()); 
+			EXPECT_EQ_DOUBLE((double)j, e.get_number()); 
+		}
+	}
+}
 
 static void test_parse() {
 	test_parse_null();
@@ -148,9 +163,7 @@ static void test_parse() {
 	test_parse_true();
 	test_parse_number();
 	test_parse_string(); 
-#if 0 
 	test_parse_array(); 
-#endif
 }
 
 int main() {

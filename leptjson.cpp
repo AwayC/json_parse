@@ -191,17 +191,18 @@ int lept_context::parse_array(lept_value* v) {
 	std::vector<lept_value> arr; 
 	parse_whitespace(); 
 	if (json[ptr] == ']') {
+		ptr++; 
 		v->set_array(arr); 
 		return LEPT_PARSE_OK; 
 	}
 	int ret;
-	size_t size; 
+	size_t len = 0; 
 	for (;;) {
 		lept_value e; 
 		if ((ret = parse_value(&e)) != LEPT_PARSE_OK) 
 			break; 
 		arr.push_back(e); 
-		size++; 
+		len++; 
 		parse_whitespace(); 
 		if (json[ptr] == ',') {
 			ptr++; 
@@ -227,7 +228,7 @@ int lept_context::parse_value(lept_value* v) {
 	case 'n': return this->parse_literal(v, "null", lept_type::null);
 	case '\0': return LEPT_PARSE_EXPECT_VALUE;
 	case '\"': return this->parse_string(v); 
-	case '[': return this->parse_array(v); 
+	case '[': return this->parse_array(v);
 	default: return parse_number(v); 
 	}
 }
@@ -260,10 +261,11 @@ lept_value::lept_value() {
 lept_value::lept_value(const lept_value& val) {
 	this->free(); 
 	switch (val.type) {
-	case lept_type::number: n = val.n; break;
-	case lept_type::string: new(&s) std::string(val.s); break;
-	case lept_type::array: new(&arr) std::vector<lept_value>(val.arr); break;
-	default: break;
+		case lept_type::number: n = val.n; break;
+		case lept_type::string: new(&s) std::string(val.s); break;
+		case lept_type::array: new(&arr) std::vector<lept_value>(val.arr); break;
+		case lept_type::object: new(&obj) std::map<std::string, lept_value>(val.obj); break;
+		default: break;
 	}
 	type = val.type; 
 }
@@ -278,6 +280,8 @@ void lept_value::free() {
 			s.~basic_string(); break;
 		case lept_type::array: 
 			arr.~vector(); break; 
+		case lept_type::object : 
+			obj.~map(); 
 		default: 
 			break; 
 	}
