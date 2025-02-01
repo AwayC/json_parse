@@ -28,6 +28,7 @@ public :
 	void encode_utf8(int u); 
 	void push_char(char c);
 	std::string pop_string(size_t size); 
+
 	lept_context() { ptr = str_top = 0; stk_str = ""; };
 };
 
@@ -415,4 +416,85 @@ void lept_value::set_object(std::map<std::string, lept_value> mp) {
 	this->free(); 
 	type = lept_type::object; 
 	new(&obj) std::map<std::string, lept_value>(mp); 
+}
+
+void lept_value::stringify_string(std::string& stk) { 
+	stk += '\"'; 
+	for (int i = 0; i < s.size(); i++) {
+		char ch = s[i]; 
+		switch (ch) {
+			case '\"': stk += "\\\""; break;
+			case '/': stk += "\\/"; break;
+			case '\\': stk += "\\\\"; break;
+			case '\b': stk += "\\b"; break;
+			case '\t': stk += "\\t"; break;
+			case '\r': stk += "\\r"; break;
+			case '\f': stk += "\\f"; break;
+			case '\n': stk += "\\n"; break;
+			default:
+				if (ch < 0x20) {
+					char buff[7];
+					sprintf(buff, "\\u%04X", ch);
+					stk += buff;
+				}
+				else
+					stk += s[i];
+				break;
+		}
+	}
+	stk += '\"'; 
+}
+
+void lept_value::stringify_value(std::string& stk) {
+	int flag; 
+	switch (type) {
+		case lept_type::null: stk += "null"; break; 
+		case lept_type::ltrue: stk += "true"; break; 
+		case lept_type::lfalse: stk += "false"; break; 
+		case lept_type::number: 
+			char s[32]; 
+			sprintf(s, "%.17g", n); 
+			stk += s; 
+			break; 
+#if 1
+		case lept_type::string: stringify_string(stk); break; 
+#endif
+#if 1
+		case lept_type::array: 
+			stk += "["; 
+			flag = 0; 
+			for (auto val : arr) {
+				if (flag) stk += ",";
+				else flag |= 1; 
+				val.stringify_value(stk); 
+			}
+			stk += "]"; 
+			break; 
+#endif
+#if 1 
+		case lept_type::object: 
+			stk += "{"; 
+			flag = 0;
+			for (auto &item : obj) {
+				if (flag) stk += ',';
+				else flag |= 1; 
+				stk += "\""; 
+				stk += item.first; 
+				stk += "\""; 
+				stk += ":"; 
+				item.second.stringify_value(stk); 
+			}
+			stk += "}"; 
+			break; 
+#endif
+		default: 
+			break; 
+	}
+
+}
+
+std::string lept_value::stringify() {
+	std::string stk; 
+	stringify_value(stk); 
+	return stk; 
 }

@@ -212,6 +212,33 @@ void test_parse_object() {
 #endif 
 }
 
+#define TEST_STRINGIFY(json) do { lept_value v ; v.parse(json); \
+std::string str = v.stringify(); EXPECT_EQ_STRING(json, str.c_str(), str.size()); } while(0)
+
+static void test_stringify() {
+	TEST_STRINGIFY("null"); 
+	TEST_STRINGIFY("false"); 
+	TEST_STRINGIFY("true"); 
+	TEST_STRINGIFY("123.3231"); 
+	TEST_STRINGIFY("\"ABFDSF\""); 
+	TEST_STRINGIFY("\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
+	TEST_STRINGIFY("[null,false,true,123,\"abc\"]");
+	TEST_STRINGIFY("[[],[0],[0,1],[0,1,2]]"); 
+#if 0 
+	TEST_STRINGIFY(
+		"{"
+		"\"n\":null,"
+		"\"f\":false,"
+		"\"t\":true,"
+		"\"i\":123,"
+		"\"s\":\"abc\","
+		"\"a\":[1,2,3],"
+		"\"o\":{\"1\":1,\"2\":2,\"3\":3}"
+		"}"
+	); 
+#endif 
+}
+
 static void test_parse() {
 	test_parse_null();
 	test_parse_false();
@@ -220,6 +247,7 @@ static void test_parse() {
 	test_parse_string(); 
 	test_parse_array(); 
 	test_parse_object(); 
+	test_stringify(); 
 }
 
 int main() {
