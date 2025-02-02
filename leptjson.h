@@ -10,22 +10,24 @@ class lept_value;
 
 class lept_value {
 private: 
-	union {
-	public: 
+	union u{
 		double n;
 		std::string s;
 		std::vector<lept_value> arr;
 		std::map<std::string, lept_value> obj;
+		u() {}; 
+		~u() {}; 
 	};
 	lept_type type;
+	u v; 
 
 	void free(); 
 	void stringify_value(std::string &stk); 
 	void stringify_string(std::string& stk); 
 public : 
-	lept_value() ;
+	lept_value() noexcept ;
 	lept_value(const lept_value& val); 
-	~lept_value();
+	~lept_value() noexcept;
 	
 	int parse(std::string json);
 	
@@ -42,15 +44,15 @@ public :
 	double get_number(); 
 	void set_number(double num);
 
-	const std::string get_string();
-	size_t get_string_length();
-	void set_string(std::string, size_t len);
+	const std::string& get_string();
+	void set_string(std::string);
 
 	size_t get_array_size();
-	lept_value get_array_element(size_t index);
-	void set_array(const std::vector<lept_value>& val);
+	lept_value& get_array_element(size_t index);
+	const lept_value& get_element(size_t index); 
+	void set_array(std::vector<lept_value>&& val);
 
-	bool find_key(std::string key);
+	bool contains_key(std::string key);
 	lept_value get_object_value(std::string key); 
 	size_t get_object_size(); 
 	void set_object(const std::map<std::string, lept_value> mp); 

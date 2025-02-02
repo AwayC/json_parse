@@ -140,7 +140,7 @@ int lept_context::parse_string(lept_value* v) {
 		switch (ch) {
 			case '\"':
 				len = str_top - head;
-				v->set_string(pop_string(len), len);
+				v->set_string(pop_string(len));
 				ptr = ++tmp;
 				str_top = head; 
 				stk_str.clear(); 
@@ -197,7 +197,7 @@ int lept_context::parse_array(lept_value* v) {
 	parse_whitespace(); 
 	if (json[ptr] == ']') {
 		ptr++; 
-		v->set_array(arr); 
+		v->set_array(std::move(arr)); 
 		return LEPT_PARSE_OK; 
 	}
 	int ret;
@@ -215,7 +215,7 @@ int lept_context::parse_array(lept_value* v) {
 		}
 		else if (json[ptr] == ']') {
 			ptr++; 
-			v->set_array(arr); 
+			v->set_array(std::move(arr)); 
 			return LEPT_PARSE_OK; 
 		}
 		else {
@@ -303,34 +303,33 @@ int lept_value::parse(std::string json) {
 	return ret;
 }
 
-lept_value::lept_value() {
+lept_value::lept_value() noexcept{
 	this->type = lept_type::null; 
 }
 
 lept_value::lept_value(const lept_value& val) {
-	this->free(); 
 	switch (val.type) {
-		case lept_type::number: n = val.n; break;
-		case lept_type::string: new(&s) std::string(val.s); break;
-		case lept_type::array: new(&arr) std::vector<lept_value>(val.arr); break;
-		case lept_type::object: new(&obj) std::map<std::string, lept_value>(val.obj); break;
+		case lept_type::number: v.n = val.v.n; break;
+		case lept_type::string: new(&v.s) std::string(val.v.s); break;
+		case lept_type::array: new(&v.arr) std::vector<lept_value>(val.v.arr); break;
+		case lept_type::object: new(&v.obj) std::map<std::string, lept_value>(val.v.obj); break;
 		default: break;
 	}
 	type = val.type; 
 }
 
-lept_value::~lept_value() {
+lept_value::~lept_value() noexcept{
 	this->free(); 
 }
 
 void lept_value::free() {
 	switch (this->type) {
 		case lept_type::string: 
-			s.~basic_string(); break;
+			v.s.~basic_string(); break;
 		case lept_type::array: 
-			arr.~vector(); break; 
+			v.arr.~vector(); break; 
 		case lept_type::object : 
-			obj.~map(); 
+			v.obj.~map(); 
 		default: 
 			break; 
 	}
@@ -343,8 +342,7 @@ void lept_value::set_null() {
 
 void lept_value::set_boolean(int b) {
 	this->free(); 
-	if (b != 0) type = lept_type::ltrue;
-	else type = lept_type::lfalse;
+	type = b == 0 ? lept_type::lfalse : lept_type::ltrue; 
 }
 
 bool lept_value::get_boolean() {
@@ -356,72 +354,71 @@ bool lept_value::get_boolean() {
 void lept_value::set_number(double num) {
 	this->free();
 	this->type = lept_type::number;
-	this->n = num; 
+	this->v.n = num; 
 }
 
 double lept_value::get_number() {
 	assert(this->type == lept_type::number); 
-	return n;
+	return v.n;
 }
 
-const std::string lept_value::get_string() {
+const std::string& lept_value::get_string() {
 	assert(type == lept_type::string);
-	return s; 
+	return v.s; 
 }
 
-void lept_value::set_string(std::string str, size_t len) {
-	assert(str.size() == len); 
+void lept_value::set_string(std::string str) {
 	this->free();
-	new(&s) std::string; 
+	new(&v.s) std::string; 
 	type = lept_type::string; 
-	this->s; 
-	this->s = str; 
+	this->v.s; 
+	this->v.s = str; 
 }
 
-size_t lept_value::get_string_length() {
-	assert(type == lept_type::string); 
-	return s.size(); 
-}
-
-void lept_value::set_array(const std::vector<lept_value>& val) {
+void lept_value::set_array(std::vector<lept_value>&& val) {
 	this->free(); 
 	type = lept_type::array; 
-	new(&arr) std::vector<lept_value>(val); 
+	new(&v.arr) std::vector<lept_value>(val); 
 }
 
 size_t lept_value::get_array_size() {
 	assert(type == lept_type::array); 
-	return arr.size(); 
+	return v.arr.size(); 
 }
 
-lept_value lept_value::get_array_element(size_t index) {
-	assert(type == lept_type::array && arr.size() > index); 
-	return arr[index]; 
+lept_value& lept_value::get_array_element(size_t index) {
+	assert(type == lept_type::array && v.arr.size() > index); 
+	return v.arr[index]; 
 }
 
-bool lept_value::find_key(std::string key) {
-	return (obj.count(key) != 0); 
+const lept_value& lept_value::get_element(size_t index) {
+	assert(type == lept_type::array && v.arr.size() > index); 
+	return v.arr[index]; 
+}
+
+bool lept_value::contains_key(std::string key) {
+	return (v.obj.count(key) != 0); 
 }
 
 lept_value lept_value::get_object_value(std::string key) {
-	assert(obj.count(key) > 0); 
-	return obj[key]; 
+	assert(v.obj.count(key) > 0); 
+	return v.obj[key]; 
 }
 
 size_t lept_value::get_object_size() {
-	return obj.size(); 
+	return v.obj.size(); 
 }
 
 void lept_value::set_object(std::map<std::string, lept_value> mp) {
 	this->free(); 
 	type = lept_type::object; 
-	new(&obj) std::map<std::string, lept_value>(mp); 
+	new(&v.obj) std::map<std::string, lept_value>(mp); 
 }
 
 void lept_value::stringify_string(std::string& stk) { 
 	stk += '\"'; 
-	for (int i = 0; i < s.size(); i++) {
-		char ch = s[i]; 
+	for (int i = 0; i < v.s.size(); i++) {
+		char ch = v.s[i]; 
 		switch (ch) {
 			case '\"': stk += "\\\""; break;
 			case '/': stk += "\\/"; break;
@@ -438,7 +435,7 @@ void lept_value::stringify_string(std::string& stk) {
 					stk += buff;
 				}
 				else
-					stk += s[i];
+					stk += v.s[i];
 				break;
 		}
 	}
@@ -448,12 +445,12 @@ void lept_value::stringify_string(std::string& stk) {
 void lept_value::stringify_value(std::string& stk) {
 	int flag; 
 	switch (type) {
-		case lept_type::null: stk += "null"; break; 
-		case lept_type::ltrue: stk += "true"; break; 
-		case lept_type::lfalse: stk += "false"; break; 
+		case lept_type::null: stk.append("null"); break; 
+		case lept_type::ltrue: stk.append( "true"); break; 
+		case lept_type::lfalse: stk.append( "false"); break; 
 		case lept_type::number: 
 			char s[32]; 
-			sprintf(s, "%.17g", n); 
+			sprintf(s, "%.17g", v.n); 
 			stk += s; 
 			break; 
 #if 1
@@ -461,36 +458,35 @@ void lept_value::stringify_value(std::string& stk) {
 #endif
 #if 1
 		case lept_type::array: 
-			stk += "["; 
+			stk.push_back('['); 
 			flag = 0; 
-			for (auto val : arr) {
-				if (flag) stk += ",";
+			for (auto val : v.arr) {
+				if (flag) stk.push_back(','); 
 				else flag |= 1; 
 				val.stringify_value(stk); 
 			}
-			stk += "]"; 
+			stk.push_back(']'); 
 			break; 
 #endif
 #if 1 
 		case lept_type::object: 
-			stk += "{"; 
+			stk.push_back('{'); 
 			flag = 0;
-			for (auto &item : obj) {
-				if (flag) stk += ',';
+			for (auto &item : v.obj) {
+				if (flag) stk.push_back(','); 
 				else flag |= 1; 
-				stk += "\""; 
-				stk += item.first; 
-				stk += "\""; 
-				stk += ":"; 
+				stk.push_back('\"'); 
+				stk.append(item.first); 
+				stk.push_back('\"'); 
+				stk.push_back(':'); 
 				item.second.stringify_value(stk); 
 			}
-			stk += "}"; 
+			stk.push_back('}'); 
 			break; 
 #endif
 		default: 
 			break; 
 	}
-
 }
 
 std::string lept_value::stringify() {
