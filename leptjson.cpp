@@ -5,6 +5,8 @@
 #include <vector> 
 #include <errno.h> 
 #include <iostream> 
+#include "double-conversion.h"
+using namespace double_conversion; 
 
 #define ISDIGIT(ch) ((ch) >= '0' && (ch) <= '9') 
 #define ISDIGIT1TO9(ch) ((ch) >= '1' && (ch) <= '9') 
@@ -79,18 +81,26 @@ int lept_context::parse_number(lept_value* v) {
 	if (json[tmp] == '.') {
 		tmp++;
 		if (!ISDIGIT(json[tmp])) return LEPT_PARSE_INVALID_VALUE;
-		for (tmp++; ISDIGIT(json[tmp]); tmp++); 
+		for (tmp++; ISDIGIT(json[tmp]); tmp++);
 	}
 	if (json[tmp] == 'e' || json[tmp] == 'E') {
 		tmp++;
 		if (json[tmp] == '+' || json[tmp] == '-') tmp++;
-		if (!ISDIGIT(json[tmp])) return LEPT_PARSE_INVALID_VALUE; 
+		if (!ISDIGIT(json[tmp])) return LEPT_PARSE_INVALID_VALUE;
 		for (tmp++; ISDIGIT(json[tmp]); tmp++);
 	}
 	errno = 0;
-	double num = stod(json.substr(ptr, tmp - ptr)); 
-	if (errno == ERANGE && (num == HUGE_VAL || num == -HUGE_VAL))
-		return LEPT_PARSE_NUMBER_TOO_BIG;
+	//double num = stod(json.substr(ptr, tmp - ptr));
+	const int flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
+							   StringToDoubleConverter::ALLOW_LEADING_SPACES; 
+	StringToDoubleConverter converter(flags, 0.0, 0.0, "inf", "nan"); 
+	int processed_characters_count;
+	double num = converter.StringToDouble(json.substr(ptr, tmp - ptr).c_str() , tmp - ptr, &processed_characters_count);
+
+	/*if (errno == ERANGE && (num == HUGE_VAL || num == -HUGE_VAL))
+		return LEPT_PARSE_NUMBER_TOO_BIG;*/
+	if (std::isinf(num) || std::isnan(num))
+		return LEPT_PARSE_NUMBER_TOO_BIG; 
 	v->set_number(num); 
 	ptr = tmp;
 	return LEPT_PARSE_OK;
