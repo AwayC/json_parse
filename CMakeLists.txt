@@ -1,5 +1,22 @@
-cmake_minimum_required(VERSION 3.10) 
+cmake_minimum_required(VERSION 3.14) 
 project(leptjson_test)
+
+# GoogleTest requires at least C++14
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+enable_testing()
+
 
 file(DOWNLOAD https://github.com/cpm-cmake/CPM.cmake/releases/latest/download/CPM.cmake 
      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
@@ -30,3 +47,12 @@ target_link_libraries(leptjson_test PRIVATE
     leptjson
 )
 
+add_executable(g-test g-test.cc)
+target_link_libraries(
+    g-test
+    GTest::gtest_main
+    leptjson
+)
+
+include(GoogleTest)
+gtest_discover_tests(g-test)
