@@ -140,12 +140,12 @@ void static test_parse_array() {
 	for (size_t i = 0; i < 5;i ++) 
 		do {
 			test_count++; if ((a[i]) == (v.get_array_element(i).get_type())) test_pass++; else {
-				fprintf((__acrt_iob_func(2)), "%s:%d: expect: " "%d"" actual: " "%d" "\n", "E:\\C++start\\JSON_PARSE\\test.cpp", 141, a[i], v.get_array_element(i).get_type()); main_ret = 1;
+				fprintf(stderr, "%s:%d: expect: " "%d"" actual: " "%d" "\n", "E:\\C++start\\JSON_PARSE\\test.cpp", 141, a[i], v.get_array_element(i).get_type()); main_ret = 1;
 			}
 		} while (0);
 	do {
 		test_count++; if ((123.0) == (v.get_array_element(3).get_number())) test_pass++; else {
-			fprintf((__acrt_iob_func(2)), "%s:%d: expect: " "%.17g"" actual: " "%.17g" "\n", "E:\\C++start\\JSON_PARSE\\test.cpp", 146, 123.0, v.get_array_element(3).get_number()); main_ret = 1;
+			fprintf(stderr, "%s:%d: expect: " "%.17g"" actual: " "%.17g" "\n", "E:\\C++start\\JSON_PARSE\\test.cpp", 146, 123.0, v.get_array_element(3).get_number()); main_ret = 1;
 		}
 	} while (0);
 	EXPECT_EQ_STRING("abc", v.get_array_element(4).get_string().c_str(), v.get_array_element(4).get_string().size());
@@ -247,6 +247,25 @@ static void test_stringify() {
 #endif 
 }
 
+static void test_construct() {
+	lept_value v = {
+		{"null", nullptr},
+		{"false", false},
+		{"true", true},
+		{"number", 123.0},
+		{"string", "abc"},
+		{"array", {
+			{"a1", 1.0,},
+			{"a2", 2.0,},
+			{"a3", 3.0,},
+		}},
+	};
+
+	std::string str = v.stringify();
+	std::cout << str << std::endl;
+}
+
+
 static void test_parse() {
 	test_parse_null();
 	test_parse_false();
@@ -255,7 +274,8 @@ static void test_parse() {
 	test_parse_string(); 
 	test_parse_array(); 
 	test_parse_object(); 
-	test_stringify(); 
+	test_stringify();
+	test_construct();
 }
 
 int main() {
