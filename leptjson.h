@@ -56,6 +56,10 @@ public :
 
 	bool get_boolean();
 	void set_boolean(int b);
+	void set_boolean(bool b)
+	{
+		set_boolean(b ? 1 : 0);
+	}
 
 	double get_number();
 	void set_number(double num);
