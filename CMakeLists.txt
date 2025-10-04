@@ -38,6 +38,10 @@ add_library(leptjson
 	leptjson.h 
 )
 
+target_include_directories(leptjson PUBLIC
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 target_link_libraries(leptjson PRIVATE double-conversion) 
 add_executable(leptjson_test test.cpp) 
 target_link_libraries(leptjson_test PRIVATE leptjson) 
