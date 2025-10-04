@@ -32,15 +32,20 @@ private:
 public :
 	lept_value() noexcept ;
 	lept_value(const lept_value& val);
-	lept_value(std::string& s);
+	lept_value(const std::string& s);
+	lept_value(std::string&& s);
 	lept_value(double d);
+	lept_value(int i) : lept_value((double)i) {}
 	lept_value(std::vector<lept_value>&& arr);
 	lept_value(std::map<std::string, lept_value>&& obj);
-	lept_value(bool b);
 	lept_value(std::nullptr_t) noexcept;
+	lept_value(const char* str) : lept_value(std::string(str)) {}
+	lept_value(bool b)
+	{
+		this->set_boolean(b);
+	}
 
-	lept_value(std::initializer_list<std::pair<std::string, lept_value>> initList);
-	// lept_value(std::initializer_list<lept_value> initList);
+	lept_value(std::initializer_list<lept_value> initList);
 
 	~lept_value() noexcept;
 
