@@ -261,8 +261,11 @@ static void test_construct() {
 		}},
 	};
 
+
 	std::string str = v.stringify();
 	std::cout << str << std::endl;
+
+
 }
 
 

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10) 
 project(leptjson_test)
 
+set(CMAKE_CXX_STANDARD 17)
+
 set(headers
 	third-party/double-conversion/bignum.h
 	third-party/double-conversion/bignum-dtoa.h
