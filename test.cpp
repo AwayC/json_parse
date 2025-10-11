@@ -260,6 +260,7 @@ static void test_construct() {
 
 	std::string str = v.stringify();
 	std::cout << str << std::endl;
+	std::cout << v["key"].stringify() << std::endl;
 	str = arr.stringify();
 	std::cout << str << std::endl;
 

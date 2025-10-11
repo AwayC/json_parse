@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <stddef.h>
 #include <string>
 #include <vector>
@@ -83,6 +84,12 @@ public :
 	size_t get_object_size();
 	void set_object(object_t&& obj);
 	void set_object(const std::map<std::string, lept_value>& mp);
+
+	lept_value& operator[](const std::string& key)
+	{
+		assert(type == lept_type::object);
+		return v.obj[key];
+	}
 
 	std::string stringify();
 };
