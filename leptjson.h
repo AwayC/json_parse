@@ -27,8 +27,8 @@ private:
 	u v;
 
 	void free();
-	void stringify_value(std::string &stk);
-	void stringify_string(std::string& stk);
+	void stringify_value(std::string &stk) const;
+	void stringify_string(std::string& stk) const;
 
 public :
 	lept_value() noexcept ;
@@ -47,6 +47,11 @@ public :
 	}
 
 	lept_value(std::initializer_list<lept_value> initList);
+	lept_value& operator=(lept_value val)
+	{
+		std::swap(*this, val);
+		return *this;
+	}
 
 	~lept_value() noexcept;
 
@@ -91,7 +96,7 @@ public :
 		return v.obj[key];
 	}
 
-	std::string stringify();
+	std::string stringify() const;
 };
 
 enum  {
