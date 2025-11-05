@@ -264,6 +264,15 @@ static void test_construct() {
 	str = arr.stringify();
 	std::cout << str << std::endl;
 
+	v = arr;
+	std::cout << v.stringify() << std::endl;
+	v =  {
+		{"null", nullptr},
+		{"key", "val"},
+		{"arr", {1.0, 2.0, 3.0}},
+		{"obj", {{"1", 1.0}, {"2", 2.0}, {"3", 3.0}}}
+	};
+	std::cout << v.stringify() << std::endl;
 
 }
 
