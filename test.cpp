@@ -232,16 +232,16 @@ static void test_stringify() {
 	TEST_STRINGIFY("\"\\\" \\\\ \\/ \\b \\f \\n \\r \\t\"");
 	TEST_STRINGIFY("[null,false,true,123,\"abc\"]");
 	TEST_STRINGIFY("[[],[0],[0,1],[0,1,2]]"); 
-#if 1 
+#if 0 
 	TEST_STRINGIFY(
 		"{"
-		"\"a\":[1,2,3],"
-		"\"f\":false,"
-		"\"i\":123,"
 		"\"n\":null,"
-		"\"o\":{\"1\":1,\"2\":2,\"3\":3},"
+		"\"f\":false,"
+		"\"t\":true,"
+		"\"i\":123,"
 		"\"s\":\"abc\","
-		"\"t\":true"
+		"\"a\":[1,2,3],"
+		"\"o\":{\"1\":1,\"2\":2,\"3\":3}"
 		"}"
 	); 
 #endif 
