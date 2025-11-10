@@ -61,35 +61,35 @@ public :
 
 	void set_null();
 
-	lept_type get_type() {
+	lept_type get_type() const {
 		return type;
 	};
 
-	bool get_boolean();
+	bool get_boolean() const;
 	void set_boolean(int b);
 	void set_boolean(bool b)
 	{
 		set_boolean(b ? 1 : 0);
 	}
 
-	double get_number();
+	double get_number() const;
 	void set_number(double num);
 
-	int64_t get_integer();
+	int64_t get_integer() const;
 	void set_integer(int64_t i);
 
-	const std::string& get_string();
+	const std::string& get_string() const;
 	void set_string(std::string);
 
-	size_t get_array_size();
+	size_t get_array_size() const;
 	lept_value& get_array_element(size_t index);
-	const lept_value& get_element(size_t index);
+	const lept_value& get_element(size_t index) const;
 	void set_array(std::vector<lept_value>&& val);
 	void set_array(const array_t& arr);
 
 	bool contains_key(std::string key);
 	lept_value get_object_value(std::string key);
-	size_t get_object_size();
+	size_t get_object_size() const;
 	void set_object(object_t&& obj);
 	void set_object(const std::map<std::string, lept_value>& mp);
 

@@ -407,7 +407,7 @@ void lept_value::set_boolean(int b) {
 	type = b == 0 ? lept_type::lfalse : lept_type::ltrue;
 }
 
-bool lept_value::get_boolean() {
+bool lept_value::get_boolean() const{
 	assert(type == lept_type::lfalse || type == lept_type::ltrue);
 	if (type == lept_type::ltrue) return true;
 	else return false;
@@ -419,7 +419,7 @@ void lept_value::set_number(double num) {
 	this->v.n = num;
 }
 
-double lept_value::get_number() {
+double lept_value::get_number() const{
 	assert(this->type == lept_type::number);
 	return v.n;
 }
@@ -431,13 +431,13 @@ void lept_value::set_integer(int64_t i)
 	this->v.i = i;
 }
 
-int64_t lept_value::get_integer()
+int64_t lept_value::get_integer() const
 {
 	assert(this->type == lept_type::integer);
 	return v.i;
 }
 
-const std::string& lept_value::get_string() {
+const std::string& lept_value::get_string() const {
 	assert(type == lept_type::string);
 	return v.s;
 }
@@ -460,7 +460,7 @@ void lept_value::set_array(const array_t& arr) {
 	new(&v.arr) std::vector<lept_value>(arr);
 }
 
-size_t lept_value::get_array_size() {
+size_t lept_value::get_array_size() const {
 	assert(type == lept_type::array);
 	return v.arr.size();
 }
@@ -470,7 +470,7 @@ lept_value& lept_value::get_array_element(size_t index) {
 	return v.arr[index];
 }
 
-const lept_value& lept_value::get_element(size_t index) {
+const lept_value& lept_value::get_element(size_t index) const {
 	assert(type == lept_type::array && v.arr.size() > index);
 	return v.arr[index];
 }
@@ -484,7 +484,7 @@ lept_value lept_value::get_object_value(std::string key) {
 	return v.obj[key];
 }
 
-size_t lept_value::get_object_size() {
+size_t lept_value::get_object_size() const {
 	assert(type == lept_type::object);
 	return v.obj.size();
 }
