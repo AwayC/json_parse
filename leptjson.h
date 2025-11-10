@@ -6,7 +6,7 @@
 #include <vector>
 #include <map>
 #include <initializer_list>
-enum class lept_type { null, lfalse, ltrue, number, string, array, object };
+enum class lept_type { null, lfalse, ltrue, number, integer, string, array, object };
 
 class lept_value;
 
@@ -20,6 +20,8 @@ private:
 		std::string s;
 		array_t arr;
 		object_t obj;
+		int64_t i;
+
 		u() {};
 		~u() {};
 	};
@@ -36,7 +38,7 @@ public :
 	lept_value(const std::string& s);
 	lept_value(std::string&& s);
 	lept_value(double d);
-	lept_value(int i) : lept_value((double)i) {}
+	lept_value(int64_t i);
 	lept_value(std::vector<lept_value>&& arr);
 	lept_value(std::map<std::string, lept_value>&& obj);
 	lept_value(std::nullptr_t) noexcept;
@@ -71,6 +73,9 @@ public :
 
 	double get_number();
 	void set_number(double num);
+
+	int64_t get_integer();
+	void set_integer(int64_t i);
 
 	const std::string& get_string();
 	void set_string(std::string);

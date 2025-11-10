@@ -74,6 +74,8 @@ int lept_context::parse_literal(lept_value* v, std::string literal, lept_type ty
 
 int lept_context::parse_number(lept_value* v) {
 	size_t tmp = ptr;
+	bool is_integer = true;
+
 	if (json[tmp] == '-') tmp++;
 	if (json[tmp] == '0') tmp++;
 	else {
@@ -81,29 +83,44 @@ int lept_context::parse_number(lept_value* v) {
 		for (tmp++; ISDIGIT(json[tmp]); tmp++);
 	}
 	if (json[tmp] == '.') {
+		is_integer = false;
 		tmp++;
 		if (!ISDIGIT(json[tmp])) return LEPT_PARSE_INVALID_VALUE;
 		for (tmp++; ISDIGIT(json[tmp]); tmp++);
 	}
 	if (json[tmp] == 'e' || json[tmp] == 'E') {
+		is_integer = false;
 		tmp++;
 		if (json[tmp] == '+' || json[tmp] == '-') tmp++;
 		if (!ISDIGIT(json[tmp])) return LEPT_PARSE_INVALID_VALUE;
 		for (tmp++; ISDIGIT(json[tmp]); tmp++);
 	}
-	errno = 0;
-	//double num = stod(json.substr(ptr, tmp - ptr));
-	const int flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
-							   StringToDoubleConverter::ALLOW_LEADING_SPACES;
-	StringToDoubleConverter converter(flags, 0.0, 0.0, "inf", "nan");
-	int processed_characters_count;
-	double num = converter.StringToDouble(json.substr(ptr, tmp - ptr).c_str() , tmp - ptr, &processed_characters_count);
 
-	/*if (errno == ERANGE && (num == HUGE_VAL || num == -HUGE_VAL))
-		return LEPT_PARSE_NUMBER_TOO_BIG;*/
-	if (std::isinf(num) || std::isnan(num))
-		return LEPT_PARSE_NUMBER_TOO_BIG;
-	v->set_number(num);
+	if (is_integer)
+	{
+		try {
+			long long int_val = std::stoll(json.substr(ptr, tmp - ptr));
+			v->set_integer(int_val);
+		}
+		catch (const std::out_of_range& e) {
+			return LEPT_PARSE_NUMBER_TOO_BIG;
+		}
+	} else
+	{
+		const int flags = StringToDoubleConverter::ALLOW_TRAILING_JUNK |
+							   StringToDoubleConverter::ALLOW_LEADING_SPACES;
+		StringToDoubleConverter converter(flags, 0.0, 0.0, "inf", "nan");
+		int processed_characters_count;
+		double num = converter.StringToDouble(json.substr(ptr, tmp - ptr).c_str() , tmp - ptr, &processed_characters_count);
+
+		/*if (errno == ERANGE && (num == HUGE_VAL || num == -HUGE_VAL))
+			return LEPT_PARSE_NUMBER_TOO_BIG;*/
+		if (std::isinf(num) || std::isnan(num))
+			return LEPT_PARSE_NUMBER_TOO_BIG;
+		v->set_number(num);
+		//double num = stod(json.substr(ptr, tmp - ptr));
+	}
+
 	ptr = tmp;
 	return LEPT_PARSE_OK;
 }
@@ -338,6 +355,7 @@ lept_value::lept_value() noexcept{
 lept_value::lept_value(const lept_value& val) {
 	switch (val.type) {
 		case lept_type::number: v.n = val.v.n; break;
+		case lept_type::integer: v.i = val.v.i; break;
 		case lept_type::string: new(&v.s) std::string(val.v.s); break;
 		case lept_type::array: new(&v.arr) array_t(val.v.arr); break;
 		case lept_type::object: new(&v.obj) object_t(val.v.obj); break;
@@ -351,6 +369,7 @@ lept_value& lept_value::operator=(lept_value val) {
 
 	switch (val.type) {
 		case lept_type::number: v.n = val.v.n; break;
+		case lept_type::integer: v.i = val.v.i; break;
 		case lept_type::string: new(&v.s) std::string(std::move(val.v.s)); break;
 		case lept_type::array: new(&v.arr) array_t(std::move(val.v.arr)); break;
 		case lept_type::object: new(&v.obj) object_t(std::move(val.v.obj)); break;
@@ -403,6 +422,19 @@ void lept_value::set_number(double num) {
 double lept_value::get_number() {
 	assert(this->type == lept_type::number);
 	return v.n;
+}
+
+void lept_value::set_integer(int64_t i)
+{
+	this->free();
+	this->type = lept_type::integer;
+	this->v.i = i;
+}
+
+int64_t lept_value::get_integer()
+{
+	assert(this->type == lept_type::integer);
+	return v.i;
 }
 
 const std::string& lept_value::get_string() {
@@ -504,9 +536,18 @@ void lept_value::stringify_value(std::string& stk) const {
 		case lept_type::ltrue: stk.append( "true"); break;
 		case lept_type::lfalse: stk.append( "false"); break;
 		case lept_type::number:
+		{
 			char s[32];
 			sprintf(s, "%.17g", v.n);
 			stk += s;
+		}
+			break;
+		case lept_type::integer:
+		{
+			char s[32];
+			sprintf(s, "%ld", v.i);
+			stk += s;
+		}
 			break;
 #if 1
 		case lept_type::string: stringify_string(stk); break;
