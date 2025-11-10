@@ -608,6 +608,19 @@ lept_value::lept_value(double d)
 	this->type = lept_type::number;
 	this->v.n = d;
 }
+
+lept_value::lept_value(int i)
+{
+	this->type = lept_type::integer;
+	this->v.i = i;
+}
+
+lept_value::lept_value(int64_t i)
+{
+	this->type = lept_type::integer;
+	this->v.i = i;
+}
+
 lept_value::lept_value(std::vector<lept_value>&& arr)
 {
 	this->type = lept_type::array;

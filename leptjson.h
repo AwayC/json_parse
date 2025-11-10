@@ -38,6 +38,7 @@ public :
 	lept_value(const std::string& s);
 	lept_value(std::string&& s);
 	lept_value(double d);
+	lept_value(int i);
 	lept_value(int64_t i);
 	lept_value(std::vector<lept_value>&& arr);
 	lept_value(std::map<std::string, lept_value>&& obj);

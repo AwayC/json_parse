@@ -264,11 +264,11 @@ static void test_construct() {
 	lept_value v = {
 		{"null", nullptr},
 		{"key", "val"},
-		{"arr", {1.0, 2.0, 3.0}},
+		{"arr", {1, 2, 3}},
 		{"obj", {{"1", 1.0}, {"2", 2.0}, {"3", 3.0}}}
 	};
 	lept_value arr = {
-		nullptr, "key", {1.0, 2.0, 3.0}
+		nullptr, "key", {1, 2, 3}
 	};
 
 	std::string str = v.stringify();
@@ -282,7 +282,7 @@ static void test_construct() {
 	v =  {
 		{"null", nullptr},
 		{"key", "val"},
-		{"arr", {1.0, 2.0, 3.0}},
+		{"arr", {1, 2.0, 3}},
 		{"obj", {{"1", 1.0}, {"2", 2.0}, {"3", 3.0}}}
 	};
 	std::cout << v.stringify() << std::endl;
