@@ -92,11 +92,19 @@ public :
 	size_t get_object_size() const;
 	void set_object(object_t&& obj);
 	void set_object(const std::map<std::string, lept_value>& mp);
+	const object_t& get_object() const
+	{
+		assert(type == lept_type::object);
+		return v.obj;
+	}
+
 	object_t& get_object()
 	{
 		assert(type == lept_type::object);
 		return v.obj;
 	}
+
+
 
 	lept_value& operator[](const std::string& key)
 	{
